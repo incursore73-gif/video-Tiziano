@@ -384,7 +384,7 @@ function startMainVideo() {
   // Timeout di sicurezza: se non parte entro 10s (rete instabile), mostra errore
   playTimeoutId = setTimeout(() => {
     if (video.paused || video.readyState < 3) showError();
-  }, 10000);
+  }, 20000);
 }
 
 document.getElementById('playBtn').addEventListener('click', () => {
