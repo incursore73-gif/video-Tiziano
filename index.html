@@ -13,17 +13,14 @@
 <meta property="og:title" content="Guarda il video 🔥">
 <meta property="og:description" content="Tocca per iniziare">
 <meta property="og:image" content="https://incursore73-gif.github.io/video-Tiziano/og.jpg">
-<meta property="og:image:width" content="768">
-<meta property="og:image:height" content="1376">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://incursore73-gif.github.io/video-Tiziano/">
 
 <title>Ruota il telefono</title>
 
-<!-- Preload: il browser inizia a scaricare questi file appena possibile,
-     prima ancora che il resto della pagina finisca di caricare -->
 <link rel="preload" href="preview.jpg" as="image" fetchpriority="high">
 <link rel="preload" href="loop.mp4" as="video" type="video/mp4">
-<link rel="preload" href="primo.mp4" as="video" type="video/mp4">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; touch-action:manipulation; }
   html, body {
@@ -118,6 +115,33 @@
     transition: opacity 0.4s ease;
   }
 
+  /* ---------- Effetto apertura a sipario sul video ---------- */
+  .curtain {
+    position:fixed; left:0; right:0; z-index:10;
+    background:#000;
+    pointer-events:none;
+    display:none; /* nascosti finché il video principale non parte */
+  }
+  .curtain.active { display:block; }
+  .curtain.top { top:0; height:50%; transform:translateY(0); }
+  .curtain.bottom { bottom:0; height:50%; transform:translateY(0); }
+  .curtain::after {
+    content:'';
+    position:absolute; left:0; right:0; height:2px;
+    background: rgba(255,120,40,0.9);
+    box-shadow: 0 0 12px rgba(255,120,40,0.7);
+  }
+  .curtain.top::after { bottom:0; }
+  .curtain.bottom::after { top:0; }
+  body.curtainOpen .curtain.top {
+    transform:translateY(-100%);
+    transition: transform 0.9s cubic-bezier(.65,0,.35,1);
+  }
+  body.curtainOpen .curtain.bottom {
+    transform:translateY(100%);
+    transition: transform 0.9s cubic-bezier(.65,0,.35,1);
+  }
+
   /* Overlay tap iniziale: sblocca sensori (iOS) + audio */
   #tapOverlay {
     position:fixed; inset:0; z-index:20;
@@ -201,6 +225,9 @@
   <div class="frameCorner bl"></div>
   <div class="frameCorner br"></div>
 </div>
+
+<div class="curtain top"></div>
+<div class="curtain bottom"></div>
 
 <div id="errorMsg">
   <div>
@@ -375,13 +402,21 @@ function startMainVideo() {
   setTimeout(() => bgLoop.pause(), 400); // pausa dopo il fade, risparmia risorse
   requestWakeLock();
 
+  // Effetto sipario: i pannelli compaiono ORA (prima erano nascosti, per
+  // non coprire il loop di sfondo), coprono il video appena partito e poi
+  // si aprono dopo una breve attesa.
+  document.querySelectorAll('.curtain').forEach(c => c.classList.add('active'));
+  requestAnimationFrame(() => {
+    setTimeout(() => document.body.classList.add('curtainOpen'), 300);
+  });
+
   // Contatore visualizzazioni: conta ogni volta che il video parte davvero
   // (non solo l'apertura pagina). Servizio esterno gratuito, nessun backend
   // tuo necessario. Controlla il conteggio visitando in un browser:
   // https://countapi.mileshilliard.com/api/v1/get/video-by-tizaino-views
   fetch('https://countapi.mileshilliard.com/api/v1/hit/video-by-tizaino-views').catch(() => {});
 
-  // Timeout di sicurezza: se non parte entro 10s (rete instabile), mostra errore
+  // Timeout di sicurezza: se non parte entro 20s (rete instabile o file pesante), mostra errore
   playTimeoutId = setTimeout(() => {
     if (video.paused || video.readyState < 3) showError();
   }, 20000);
