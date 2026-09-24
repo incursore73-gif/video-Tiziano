@@ -403,11 +403,14 @@ function startMainVideo() {
   requestWakeLock();
 
   // Effetto sipario: i pannelli compaiono ORA (prima erano nascosti, per
-  // non coprire il loop di sfondo), coprono il video appena partito e poi
-  // si aprono dopo una breve attesa.
+  // non coprire il loop di sfondo), coprono il video appena partito.
+  // Se lo schermo NON ha già ruotato da solo (rotazione bloccata, il caso
+  // più comune), diamo più tempo per girare fisicamente il telefono prima
+  // di aprire il sipario, altrimenti l'effetto passa inosservato.
   document.querySelectorAll('.curtain').forEach(c => c.classList.add('active'));
+  const curtainDelay = screenIsLandscape() ? 300 : 2200;
   requestAnimationFrame(() => {
-    setTimeout(() => document.body.classList.add('curtainOpen'), 300);
+    setTimeout(() => document.body.classList.add('curtainOpen'), curtainDelay);
   });
 
   // Contatore visualizzazioni: conta ogni volta che il video parte davvero
